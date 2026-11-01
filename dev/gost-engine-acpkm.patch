@@ -1,0 +1,159 @@
+diff --git a/gost_crypt.c b/gost_crypt.c
+index 516e598..ba185c5 100644
+--- a/gost_crypt.c
++++ b/gost_crypt.c
+@@ -489,11 +489,18 @@ static int magma_cipher_init(EVP_CIPHER_CTX *ctx, const unsigned char *key,
+                       const unsigned char *iv, int enc)
+ {
+     struct ossl_gost_cipher_ctx *c = EVP_CIPHER_CTX_get_cipher_data(ctx);
++    int key_meshing = c->key_meshing;
++    int key_meshing_set = c->key_meshing_set;
++
+     /* FIXME this is just initializtion check */
+     if (EVP_CIPHER_CTX_get_app_data(ctx) == NULL) {
+         if (!gost_cipher_set_param(c, NID_id_tc26_gost_28147_param_Z))
+             return 0;
+         EVP_CIPHER_CTX_set_app_data(ctx, EVP_CIPHER_CTX_get_cipher_data(ctx));
++        if (key_meshing_set) {
++            c->key_meshing = key_meshing;
++            c->key_meshing_set = key_meshing_set;
++        }
+ 
+         if (enc) {
+             if (init_zero_kdf_seed(c->kdf_seed) == 0)
+@@ -514,9 +521,11 @@ static int magma_cipher_init(EVP_CIPHER_CTX *ctx, const unsigned char *key,
+ 
+     if (EVP_CIPHER_CTX_nid(ctx) == NID_magma_ctr_acpkm
+      || EVP_CIPHER_CTX_nid(ctx) == NID_magma_ctr_acpkm_omac) {
+-       c->key_meshing = 1024;
++       if (!c->key_meshing_set)
++           c->key_meshing = 1024;
+     } else {
+        c->key_meshing = 0;
++       c->key_meshing_set = 0;
+     }
+ 
+     return 1;
+@@ -1187,6 +1196,7 @@ static int gost_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
+                 EVP_CIPHER_CTX_get_cipher_data(ctx);
+             int nid;
+             int cur_meshing;
++            int cur_meshing_set;
+             int ret;
+ 
+             if (c == NULL) {
+@@ -1203,8 +1213,10 @@ static int gost_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
+             }
+ 
+             cur_meshing = c->key_meshing;
++            cur_meshing_set = c->key_meshing_set;
+             ret = gost_cipher_set_param(c, nid);
+             c->key_meshing = cur_meshing;
++            c->key_meshing_set = cur_meshing_set;
+             return ret;
+         } else {
+             return 0;
+@@ -1223,6 +1235,7 @@ static int gost_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
+             }
+ 
+             c->key_meshing = arg;
++            c->key_meshing_set = 1;
+             return 1;
+         }
+     default:
+@@ -1278,6 +1291,7 @@ static int magma_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
+             }
+ 
+             c->key_meshing = arg;
++            c->key_meshing_set = 1;
+             return 1;
+         }
+     case EVP_CTRL_TLSTREE:
+@@ -1461,6 +1475,7 @@ static int magma_set_asn1_parameters (EVP_CIPHER_CTX *ctx, ASN1_TYPE *params)
+ {
+   struct ossl_gost_cipher_ctx *c = EVP_CIPHER_CTX_get_cipher_data(ctx);
+ 	c->key_meshing = 8192;
++	c->key_meshing_set = 1;
+ 
+ 	return gost2015_set_asn1_params(params, EVP_CIPHER_CTX_original_iv(ctx), 4,
+ 		c->kdf_seed);
+@@ -1472,6 +1487,7 @@ static int magma_get_asn1_parameters(EVP_CIPHER_CTX *ctx, ASN1_TYPE *params)
+ 	unsigned char iv[16];
+ 
+ 	c->key_meshing = 8192;
++	c->key_meshing_set = 1;
+ 
+ 	if (gost2015_get_asn1_params(params, MAGMA_UKM_LEN, iv, 4, c->kdf_seed) < 0)
+ 	    return -1;
+diff --git a/gost_grasshopper_cipher.c b/gost_grasshopper_cipher.c
+index ef06e2d..7b09362 100644
+--- a/gost_grasshopper_cipher.c
++++ b/gost_grasshopper_cipher.c
+@@ -331,7 +331,8 @@ gost_grasshopper_cipher_init_ctracpkm(EVP_CIPHER_CTX
+     /* NB: setting type makes EVP do_cipher callback useless */
+     c->c.type = GRASSHOPPER_CIPHER_CTRACPKM;
+     EVP_CIPHER_CTX_set_num(ctx, 0);
+-    c->section_size = 4096;
++    if (!c->section_size_set)
++        c->section_size = 4096;
+ 
+     return gost_grasshopper_cipher_init(ctx, key, iv, enc);
+ }
+@@ -347,7 +348,8 @@ gost_grasshopper_cipher_init_ctracpkm_omac(EVP_CIPHER_CTX
+     /* NB: setting type makes EVP do_cipher callback useless */
+     c->c.type = GRASSHOPPER_CIPHER_CTRACPKMOMAC;
+     EVP_CIPHER_CTX_set_num(ctx, 0);
+-    c->section_size = 4096;
++    if (!c->section_size_set)
++        c->section_size = 4096;
+ 
+     if (key) {
+         unsigned char cipher_key[32];
+@@ -987,6 +989,7 @@ static int gost_grasshopper_set_asn1_parameters(EVP_CIPHER_CTX *ctx, ASN1_TYPE *
+ 
+         /* CMS implies 256kb section_size */
+         ctr->section_size = 256*1024;
++        ctr->section_size_set = 1;
+ 
+         return gost2015_set_asn1_params(params,
+                EVP_CIPHER_CTX_original_iv(ctx), 8, ctr->kdf_seed);
+@@ -1012,6 +1015,7 @@ gost_grasshopper_get_asn1_parameters(EVP_CIPHER_CTX *ctx, ASN1_TYPE *params)
+ 
+         /* CMS implies 256kb section_size */
+         ctr->section_size = 256*1024;
++        ctr->section_size_set = 1;
+         return 1;
+     }
+     return 0;
+@@ -1110,6 +1114,7 @@ static int gost_grasshopper_cipher_ctl(EVP_CIPHER_CTX *ctx, int type, int arg, v
+                || (arg % GRASSHOPPER_BLOCK_SIZE))
+                 return -1;
+             c->section_size = arg;
++            c->section_size_set = 1;
+             break;
+         }
+     case EVP_CTRL_TLSTREE:
+diff --git a/gost_grasshopper_cipher.h b/gost_grasshopper_cipher.h
+index a3a6470..5939cb1 100644
+--- a/gost_grasshopper_cipher.h
++++ b/gost_grasshopper_cipher.h
+@@ -33,6 +33,7 @@ typedef struct {
+     grasshopper_w128_t partial_buffer;
+     unsigned int section_size;  /* After how much bytes mesh the key,
+ 				   if 0 never mesh and work like plain ctr. */
++    unsigned int section_size_set;
+     unsigned char kdf_seed[8];
+ 		unsigned char tag[16];
+ 		EVP_MD_CTX *omac_ctx;
+diff --git a/gost_lcl.h b/gost_lcl.h
+index ffa8c76..2558a2f 100644
+--- a/gost_lcl.h
++++ b/gost_lcl.h
+@@ -211,6 +211,7 @@ struct ossl_gost_cipher_ctx {
+     int paramNID;
+     unsigned int count;
+     int key_meshing;
++    int key_meshing_set;
+     unsigned char kdf_seed[8];
+     unsigned char tag[8];
+     gost_ctx cctx;

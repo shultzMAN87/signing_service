@@ -1,0 +1,7 @@
+{
+  "admin-token-1": {"id": "admin.petrov", "roles": ["admin"]},
+  "admin-token-2": {"id": "admin.sidorova", "roles": ["admin"]},
+  "erp-token": {"id": "1c-erp", "roles": ["signer"]},
+  "edo-token": {"id": "edo", "roles": ["signer"]},
+  "audit-token": {"id": "ib.auditor", "roles": ["auditor"]}
+}

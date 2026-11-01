@@ -1,0 +1,5 @@
+target/
+var/
+tests/
+**/*.pfx
+.git/

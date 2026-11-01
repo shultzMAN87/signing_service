@@ -1,0 +1,66 @@
+# Тестовый стенд: две отдельные БД, Vault (dev) с Transit и сервис на КриптоПро CSP.
+#   1) положите дистрибутив КриптоПро в docker/cryptopro/linux-amd64_deb.tgz
+#   2) docker compose up --build
+#   3) ./scripts/smoke.sh <ваш.pfx> <PIN>
+services:
+  meta-db:
+    image: postgres:16
+    environment: {POSTGRES_DB: esign_meta, POSTGRES_USER: esign_meta, POSTGRES_PASSWORD: meta_pw}
+    volumes: [meta-data:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD", "pg_isready", "-U", "esign_meta", "-d", "esign_meta"], interval: 3s, retries: 30}
+
+  containers-db:
+    image: postgres:16
+    environment: {POSTGRES_DB: esign_containers, POSTGRES_USER: esign_store, POSTGRES_PASSWORD: store_pw}
+    volumes: [containers-data:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD", "pg_isready", "-U", "esign_store", "-d", "esign_containers"], interval: 3s, retries: 30}
+
+  vault:
+    image: hashicorp/vault:1.17
+    command: server -dev -dev-listen-address=0.0.0.0:8200
+    environment: {VAULT_DEV_ROOT_TOKEN_ID: esign-root}
+    cap_add: [IPC_LOCK]
+    ports: ["8200:8200"]
+    healthcheck: {test: ["CMD", "vault", "status", "-address=http://127.0.0.1:8200"], interval: 3s, retries: 30}
+
+  vault-init:
+    image: hashicorp/vault:1.17
+    depends_on: {vault: {condition: service_healthy}}
+    environment: {VAULT_TOKEN: esign-root, ESIGN_VAULT_TOKEN: esign-service-token}
+    volumes: ["./docker/vault-init.sh:/vault-init.sh:ro"]
+    entrypoint: ["/bin/sh", "/vault-init.sh"]
+
+  esign:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    depends_on:
+      meta-db: {condition: service_healthy}
+      containers-db: {condition: service_healthy}
+      vault-init: {condition: service_completed_successfully}
+    environment:
+      ESIGN_META_DSN: postgresql://esign_meta:meta_pw@meta-db/esign_meta
+      ESIGN_STORE_DSN: postgresql://esign_store:store_pw@containers-db/esign_containers
+      ESIGN_KMS: vault
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: esign-service-token      # токен только с encrypt/decrypt/rewrap
+      ESIGN_TRUST_CA: /app/trust/cryptopro-test-ca.pem   # корень тестового УЦ КриптоПро
+      ESIGN_TEST_MODE: "1"                  # разрешён открытый PIN во втором запросе
+      # Транспортный ключ для pin_envelope (необязательно): положите PFX в docker/secrets/
+      # ESIGN_TRANSPORT_PFX: /run/secrets/transport.pfx
+      # ESIGN_TRANSPORT_PIN: "..."
+      # «Кузнечик» CTR-ACPKM по умолчанию для /encrypt (КриптоПро 5.0 R2+). Иначе ГОСТ 28147-89.
+      ESIGN_ENCRYPT_OID: "1.2.643.2.2.21"
+      ESIGN_RATE_PER_CLIENT: "0"            # лимит запросов/с на систему, 0 — без лимита
+      ESIGN_RATE_PER_KEY: "0"
+      CPRO_SERIAL: ${CPRO_SERIAL:-}         # серийный номер лицензии; без него — пробный период
+    volumes:
+      - ./docker/secrets:/run/secrets:ro
+    tmpfs:
+      # Временные контейнеры КриптоПро (HDIMAGE) — только в RAM
+      - /var/opt/cprocsp/keys/esign:uid=10001,gid=10001,mode=0700
+    ports: ["8800:8800"]
+
+volumes:
+  meta-data:
+  containers-data:

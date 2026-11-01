@@ -1,0 +1,10 @@
+openssl_conf = openssl_def
+[openssl_def]
+engines = engine_section
+[engine_section]
+gost = gost_section
+[gost_section]
+engine_id = gost
+# gost-engine v3.0.3 с исправлением CTR-ACPKM (см. README). Пакет Ubuntu 3.0.2 портит расшифровку > 4 КБ.
+dynamic_path = /opt/gost-engine/gost.so
+default_algorithms = ALL

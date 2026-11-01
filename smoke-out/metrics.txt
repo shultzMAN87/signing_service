@@ -1,0 +1,103 @@
+# HELP esign_cache_entries Ключей в кэше
+# TYPE esign_cache_entries gauge
+esign_cache_entries 0
+# HELP esign_cache_hits_total Попадания в кэш ключей
+# TYPE esign_cache_hits_total counter
+esign_cache_hits_total 14
+# HELP esign_cache_misses_total Промахи кэша (загрузка ключа)
+# TYPE esign_cache_misses_total counter
+esign_cache_misses_total 6
+# HELP esign_http_requests_total HTTP-запросы
+# TYPE esign_http_requests_total counter
+esign_http_requests_total{route="/api/v1/audit",status="200"} 2
+esign_http_requests_total{route="/api/v1/decrypt",status="200"} 4
+esign_http_requests_total{route="/api/v1/decrypt",status="403"} 2
+esign_http_requests_total{route="/api/v1/emergency/block",status="200"} 2
+esign_http_requests_total{route="/api/v1/emergency/unblock",status="200"} 2
+esign_http_requests_total{route="/api/v1/emergency/unblock",status="403"} 2
+esign_http_requests_total{route="/api/v1/encrypt",status="200"} 4
+esign_http_requests_total{route="/api/v1/health",status="200"} 79
+esign_http_requests_total{route="/api/v1/keys/uploads",status="201"} 2
+esign_http_requests_total{route="/api/v1/keys/uploads/{id}/pin",status="201"} 1
+esign_http_requests_total{route="/api/v1/keys/uploads/{id}/pin",status="409"} 1
+esign_http_requests_total{route="/api/v1/keys/uploads/{id}/pin",status="422"} 2
+esign_http_requests_total{route="/api/v1/keys/{tp}/block",status="200"} 2
+esign_http_requests_total{route="/api/v1/keys/{tp}/pin/rotate",status="200"} 2
+esign_http_requests_total{route="/api/v1/keys/{tp}/unblock",status="200"} 2
+esign_http_requests_total{route="/api/v1/sign",status="200"} 14
+esign_http_requests_total{route="/api/v1/sign",status="400"} 2
+esign_http_requests_total{route="/api/v1/sign",status="423"} 4
+esign_http_requests_total{route="/metrics",status="200"} 1
+# HELP esign_keys Ключи по статусам
+# TYPE esign_keys gauge
+esign_keys{status="active"} 1
+# HELP esign_keys_expiring_30d Активные ключи, сертификат которых истекает в течение 30 дней
+# TYPE esign_keys_expiring_30d gauge
+esign_keys_expiring_30d 0
+# HELP esign_operation_seconds Длительность операций
+# TYPE esign_operation_seconds histogram
+esign_operation_seconds_bucket{op="decrypt",le="0.002"} 2
+esign_operation_seconds_bucket{op="decrypt",le="0.005"} 4
+esign_operation_seconds_bucket{op="decrypt",le="0.01"} 4
+esign_operation_seconds_bucket{op="decrypt",le="0.02"} 4
+esign_operation_seconds_bucket{op="decrypt",le="0.05"} 4
+esign_operation_seconds_bucket{op="decrypt",le="0.1"} 4
+esign_operation_seconds_bucket{op="decrypt",le="0.2"} 4
+esign_operation_seconds_bucket{op="decrypt",le="0.5"} 4
+esign_operation_seconds_bucket{op="decrypt",le="1"} 4
+esign_operation_seconds_bucket{op="decrypt",le="2"} 4
+esign_operation_seconds_bucket{op="decrypt",le="5"} 4
+esign_operation_seconds_bucket{op="decrypt",le="+Inf"} 4
+esign_operation_seconds_sum{op="decrypt"} 0.007319272999999999
+esign_operation_seconds_count{op="decrypt"} 4
+esign_operation_seconds_bucket{op="encrypt",le="0.002"} 0
+esign_operation_seconds_bucket{op="encrypt",le="0.005"} 2
+esign_operation_seconds_bucket{op="encrypt",le="0.01"} 2
+esign_operation_seconds_bucket{op="encrypt",le="0.02"} 4
+esign_operation_seconds_bucket{op="encrypt",le="0.05"} 4
+esign_operation_seconds_bucket{op="encrypt",le="0.1"} 4
+esign_operation_seconds_bucket{op="encrypt",le="0.2"} 4
+esign_operation_seconds_bucket{op="encrypt",le="0.5"} 4
+esign_operation_seconds_bucket{op="encrypt",le="1"} 4
+esign_operation_seconds_bucket{op="encrypt",le="2"} 4
+esign_operation_seconds_bucket{op="encrypt",le="5"} 4
+esign_operation_seconds_bucket{op="encrypt",le="+Inf"} 4
+esign_operation_seconds_sum{op="encrypt"} 0.041230232000000006
+esign_operation_seconds_count{op="encrypt"} 4
+esign_operation_seconds_bucket{op="install",le="0.002"} 0
+esign_operation_seconds_bucket{op="install",le="0.005"} 0
+esign_operation_seconds_bucket{op="install",le="0.01"} 0
+esign_operation_seconds_bucket{op="install",le="0.02"} 0
+esign_operation_seconds_bucket{op="install",le="0.05"} 0
+esign_operation_seconds_bucket{op="install",le="0.1"} 0
+esign_operation_seconds_bucket{op="install",le="0.2"} 0
+esign_operation_seconds_bucket{op="install",le="0.5"} 1
+esign_operation_seconds_bucket{op="install",le="1"} 1
+esign_operation_seconds_bucket{op="install",le="2"} 1
+esign_operation_seconds_bucket{op="install",le="5"} 1
+esign_operation_seconds_bucket{op="install",le="+Inf"} 1
+esign_operation_seconds_sum{op="install"} 0.421972459
+esign_operation_seconds_count{op="install"} 1
+esign_operation_seconds_bucket{op="sign",le="0.002"} 12
+esign_operation_seconds_bucket{op="sign",le="0.005"} 14
+esign_operation_seconds_bucket{op="sign",le="0.01"} 14
+esign_operation_seconds_bucket{op="sign",le="0.02"} 14
+esign_operation_seconds_bucket{op="sign",le="0.05"} 14
+esign_operation_seconds_bucket{op="sign",le="0.1"} 14
+esign_operation_seconds_bucket{op="sign",le="0.2"} 14
+esign_operation_seconds_bucket{op="sign",le="0.5"} 14
+esign_operation_seconds_bucket{op="sign",le="1"} 14
+esign_operation_seconds_bucket{op="sign",le="2"} 14
+esign_operation_seconds_bucket{op="sign",le="5"} 14
+esign_operation_seconds_bucket{op="sign",le="+Inf"} 14
+esign_operation_seconds_sum{op="sign"} 0.011189551
+esign_operation_seconds_count{op="sign"} 14
+# HELP esign_operations_total Операции сервиса по результату
+# TYPE esign_operations_total counter
+esign_operations_total{op="/api/v1/decrypt",result="forbidden"} 2
+esign_operations_total{op="/api/v1/emergency/unblock",result="second_approver_required"} 2
+esign_operations_total{op="/api/v1/keys/uploads/{id}/pin",result="invalid_pin"} 2
+esign_operations_total{op="/api/v1/keys/uploads/{id}/pin",result="key_exists"} 1
+esign_operations_total{op="/api/v1/sign",result="emergency_block"} 2
+esign_operations_total{op="/api/v1/sign",result="hash_requires_detached"} 2
+esign_operations_total{op="/api/v1/sign",result="key_blocked"} 2
